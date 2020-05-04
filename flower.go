@@ -2,15 +2,15 @@ package main
 
 import "fmt"
 
-func main() {
+func main()  {
 	var h int
 	var t int
-	var s int
-	for i := 100; i <= 999; i++ {
+	var u int
+	for i := 100; i < 999; i ++  {
 		h = i / 100
-		t = i % 100 / 10
-		s = i % 10
-		if h*h*h+t*t*t+s*s*s == i {
+		t = i % 100  / 10
+		u = i % 10
+		if i == h * h * h + t * t * t + u * u * u {
 			fmt.Println(i)
 		}
 	}
