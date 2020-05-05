@@ -5,9 +5,9 @@ import (
 	"net/http"
 )
 
-func main()  {
+func main() {
 	//获取服务器应答包内容
-	resp, err := http.Get("http://www.baidu.com")
+	resp, err := http.Get("https://movie.douban.com/top250?start=0&filter=")
 	if err != nil {
 		fmt.Println("http.get err", err)
 		return
