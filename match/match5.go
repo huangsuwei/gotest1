@@ -61,9 +61,10 @@ func SpiderPage4(idx int, page chan int) {
 		count += 1
 	}
 
+	num := count
 	for {
 		switch <-page {
-		case count:
+		case num:
 			break
 		}
 	}
