@@ -34,19 +34,20 @@ func toWork(start, end int) {
 }
 
 func SpiderPage2(idx int, page chan int) {
-	url := "https://movie.douban.com/top250?start=" + strconv.Itoa((idx-1)*25) + "&filter="
+	//url := "https://movie.douban.com/top250?start=" + strconv.Itoa((idx-1)*25) + "&filter="//豆瓣网
+	url := "http://www.chejj.cn/index.php?act=show_store&op=goods_all&id=640&curpage=" + strconv.Itoa(idx)
 
 	fmt.Println("网页为：", url)
 	//封装httpget2获取数据
 	result, err := httpGet2(url)
-	fmt.Println("result=", result)
+	//fmt.Println("result=", result)
 	if err != nil {
 		fmt.Println("httpget.err", err)
 		return
 	}
 
 	//解析，编译正则表达式---电影名称
-	ret1, err := regexp.Compile(`<img width="100" alt="(?s:(.*?))"`)
+	/*ret1, err := regexp.Compile(`<img width="100" alt="(?s:(.*?))"`)
 	//提取需要信息
 	fileName := ret1.FindAllStringSubmatch(result, -1)
 	for _, name := range fileName {
@@ -67,10 +68,22 @@ func SpiderPage2(idx int, page chan int) {
 	count := ret3.FindAllStringSubmatch(result, -1)
 	for _, name := range count {
 		fmt.Println("count:", name[1])
-	}
+	}*/
+
+	ret4, _ := regexp.Compile(`\.html" target="_blank">(?s:(.*?))</a></dt>`)
+	goodsName := ret4.FindAllStringSubmatch(result, -1)
+	fmt.Println(goodsName)
+
+	ret5, _ := regexp.Compile(`<em class="price">(?s:(.*?))</em></dd>`)
+	prices := ret5.FindAllStringSubmatch(result, -1)
+	//fmt.Println(prices)
+
+	ret6, _ := regexp.Compile(`售出：<strong>(?s:(.*?))</strong> 件`)
+	saleCounts := ret6.FindAllStringSubmatch(result, -1)
+	fmt.Println(saleCounts)
 
 	//将提取的有用信息封装到文件中
-	save2File(idx, fileName, score, count)
+	save2File(idx, goodsName, prices, saleCounts)
 
 	page <- idx
 }
@@ -90,7 +103,7 @@ func httpGet2(url string) (result string, err error) {
 	//循环爬取整页数据
 	for {
 		n, err2 := resp.Body.Read(buf)
-		fmt.Println("读取数据：", n)
+		//fmt.Println("读取数据：", n)
 		if n == 0 {
 			break
 		}
@@ -107,7 +120,7 @@ func httpGet2(url string) (result string, err error) {
 }
 
 func save2File(idx int, fileName, score, peopleNum [][]string) {
-	path := "F:/gowork/gotest1/" + "第" + strconv.Itoa(idx) + "页.txt"
+	path := "D:/gowork/gotest1/files/" + "第" + strconv.Itoa(idx) + "页.txt"
 
 	f, err := os.Create(path)
 	if err != nil {
@@ -118,7 +131,7 @@ func save2File(idx int, fileName, score, peopleNum [][]string) {
 
 	//先打印抬头， 电影名称  评分 评分人数
 	n := len(fileName) //得到条目数，应该是25
-	f.WriteString("电影名称" + "\t\t\t" + "评分" + "\t\t" + "评分人数" + "\n")
+	f.WriteString("商品名称" + "\t\t\t" + "价格" + "\t\t" + "已售数量" + "\n")
 	for i := 0; i < n; i++ {
 		f.WriteString(fileName[i][1] + "\t\t\t" + score[i][1] + "\t\t" + peopleNum[i][1] + "\n")
 	}

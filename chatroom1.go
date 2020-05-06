@@ -102,7 +102,7 @@ func handlerConnect(conn net.Conn) {
 		case <-hasData:
 			//条件满足不做任何操作，目的是为了重置定时器
 		//超时强制踢出
-		case <-time.After(10 * time.Second):
+		case <-time.After(120 * time.Second):
 			delete(onlineMap, clnt.Addr)       //将用户从online移除
 			message <- MakeMsg(clnt, "logout") //写入用户退出消息到全局channel
 			return                             //结束当前go程
