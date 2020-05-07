@@ -11,67 +11,34 @@ import (
 )
 
 func main() {
-	var start, end int
-	/*fmt.Print("请输入爬取的起始页（>= 1）")
-	fmt.Scan(&start)
-	fmt.Print("请输入爬取的结束页（>= start）")
-	fmt.Scan(&end)*/
-	start, end = 1, 1
-
-	toWork3(start, end)
-}
-
-func toWork3(start, end int) {
-	fmt.Printf("正在爬取%d到%d页的数据", start, end)
-
-	page := make(chan int)
-
-	for i := start; i <= end; i++ {
-		go SpiderPage4(i, page)
-	}
-
-	for i := start; i <= end; i++ {
-		fmt.Printf("第%d页数据存储完成！", <-page)
-	}
-}
-
-func SpiderPage4(idx int, page chan int) {
-	//url := "https://www.pengfu.com/xiaohua_" + strconv.Itoa(idx) + ".html"
 	url := "https://www.douyu.com/g_yz"
 
-	//封装函数获取段子的url
+	//爬取整个页面的全部信息存储在result中
 	result, err := httpGet4(url)
 	if err != nil {
-		fmt.Println("httpget4.err", err)
+		fmt.Println("http get err", err)
 		return
 	}
 
-	//解析，编译正则
-	//ret1, _ := regexp.Compile(`data-original="(?s:(.*?))`)
+	//解析编译正则
 	ret1, _ := regexp.Compile(`<img loading="lazy" src="(?s:(.*?))"`)
 	//提取需要信息--每个段子的url
 	alls := ret1.FindAllStringSubmatch(result, 50)
 
-	fmt.Println("alls", alls)
-
-	count := 0
-	for _, imgUrl := range alls {
-		go saveImg(count, imgUrl[1], page)
-		//fmt.Println("img:", imgUrl[1])
-		count += 1
+	page := make(chan int)
+	n := len(alls)
+	for idx, imgUrl := range alls {
+		go saveImg(idx, imgUrl[1], page)
 	}
 
-	num := count
-	for {
-		switch <-page {
-		case num:
-			break
-		}
+	for i := 0; i < n; i++ {
+		//runtime.GC()//防止主go程退出
+		fmt.Printf("第%d张图片下载完成\n", <-page+1)
 	}
 }
 
-func saveImg(count int, imgUrl string, page chan int) {
-	path := "D:/gowork/gotest1/files/douyu/" + "第" + strconv.Itoa(rand.Int()) + "页.jpg"
+func saveImg(idx int, imgUrl string, page chan int) {
+	path := "D:/gowork/gotest1/files/douyu/" + "第" + strconv.Itoa(idx) + "number" + strconv.Itoa(rand.Int()) + "页.jpg"
 	f, err := os.Create(path)
 	if err != nil {
 		fmt.Println("os.create err", err)
@@ -91,7 +58,7 @@ func saveImg(count int, imgUrl string, page chan int) {
 	for {
 		n, err2 := resp.Body.Read(buf)
 		if n == 0 {
-			fmt.Println("读取完成!")
+			fmt.Printf("第%d张图片读取完成！\n", idx+1)
 			break
 		}
 		if err2 != nil && err2 != io.EOF {
@@ -100,7 +67,8 @@ func saveImg(count int, imgUrl string, page chan int) {
 		}
 		f.Write(buf[:n])
 	}
-	page <- count
+
+	page <- idx
 }
 
 func httpGet4(url string) (result string, err error) {
