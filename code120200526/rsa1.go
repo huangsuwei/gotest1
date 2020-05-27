@@ -31,7 +31,7 @@ func GenerateRsaKey(keySize int) {
 	pem.Encode(file, &block)
 	file.Close()
 
-	//----------公钥------------
+	/**--------------------公钥----------------------**/
 	//1.从私钥中，取出公钥
 	publicKey := privateKey.PublicKey
 	//2.使用x509标准序列化
