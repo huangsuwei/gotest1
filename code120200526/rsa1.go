@@ -54,5 +54,73 @@ func GenerateRsaKey(keySize int) {
 }
 
 func main() {
-	GenerateRsaKey(1024)
+	//公钥钥长度和加密的数据时有关联的，如果数据太长了，下面这个也要相应的keySize也要相应变长
+	GenerateRsaKey(4096)
+	src := []byte("我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...")
+	cipherText := RsaEncrypt(src, "public.pem")
+	fmt.Println("加密后的密文：", cipherText)
+	plainText := RsaDecrypt(cipherText, "private.pem")
+	fmt.Printf("解密后的明文:%s\n", string(plainText))
+}
+
+//rsa加密，公钥加密
+func RsaEncrypt(plainText []byte, fileName string) []byte {
+	//打开文件，读取文件内容
+	file, err1 := os.Open(fileName)
+	if err1 != nil {
+		fmt.Println(err1)
+	}
+
+	fileInfo, err2 := file.Stat()
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	buf := make([]byte, fileInfo.Size())
+	file.Read(buf)
+	file.Close()
+
+	//2.pem解码
+	block, _ := pem.Decode(buf)
+	pubInterface, _ := x509.ParsePKIXPublicKey(block.Bytes)
+	pubKey, ok := pubInterface.(*rsa.PublicKey)
+	if !ok {
+		fmt.Println("断言失败")
+	}
+
+	//3.使用公钥加密
+	cipherText, err3 := rsa.EncryptPKCS1v15(rand.Reader, pubKey, plainText)
+	if err3 != nil {
+		fmt.Println(err3)
+	}
+
+	return cipherText
+}
+
+//rsa解密，私钥解密
+func RsaDecrypt(cipherText []byte, fileName string) []byte {
+	//打开文件，读取文件内容
+	file, err1 := os.Open(fileName)
+	if err1 != nil {
+		fmt.Println(err1)
+	}
+
+	fileInfo, err2 := file.Stat()
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	buf := make([]byte, fileInfo.Size())
+	file.Read(buf)
+	file.Close()
+
+	//2.pem解码
+	block, _ := pem.Decode(buf)
+	privateKey, _ := x509.ParsePKCS1PrivateKey(block.Bytes)
+
+	//3.使用私钥解密
+	plainText, err3 := rsa.DecryptPKCS1v15(rand.Reader, privateKey, cipherText)
+	if err3 != nil {
+		fmt.Println(err3)
+	}
+
+	return plainText
 }
