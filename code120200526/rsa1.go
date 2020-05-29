@@ -23,13 +23,7 @@ func GenerateRsaKey(keySize int) {
 		Type:  "rsa private key", //这个地方写个字符串就行
 		Bytes: derText,
 	}
-	//4.pem编码
-	file, err1 := os.Create("private.pem")
-	if err1 != nil {
-		fmt.Println(err1)
-	}
-	pem.Encode(file, &block)
-	file.Close()
+	WriteKeyToFile("private.pem1", block)
 
 	/**--------------------公钥----------------------**/
 	//1.从私钥中，取出公钥
@@ -44,40 +38,34 @@ func GenerateRsaKey(keySize int) {
 		Type:  "rsa public key",
 		Bytes: derstream,
 	}
-	//4.pem编码
-	publicFile, err3 := os.Create("public.pem")
-	if err3 != nil {
-		fmt.Println(err3)
+	WriteKeyToFile("public.pem1", publicBlock)
+}
+
+func WriteKeyToFile(fileName string, b pem.Block) {
+	file, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println("os.create err", err)
+		return
 	}
-	pem.Encode(publicFile, &publicBlock)
-	publicFile.Close()
+	//4.pem编码
+	pem.Encode(file, &b)
+	file.Close()
 }
 
 func main() {
 	//公钥钥长度和加密的数据时有关联的，如果数据太长了，下面这个也要相应的keySize也要相应变长
 	GenerateRsaKey(4096)
 	src := []byte("我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...我是小崔，如果我死了，我肯定不是自杀...")
-	cipherText := RsaEncrypt(src, "public.pem")
+	cipherText := RsaEncrypt(src, "public.pem1")
 	fmt.Println("加密后的密文：", cipherText)
-	plainText := RsaDecrypt(cipherText, "private.pem")
+	plainText := RsaDecrypt(cipherText, "private.pem1")
 	fmt.Printf("解密后的明文:%s\n", string(plainText))
 }
 
 //rsa加密，公钥加密
 func RsaEncrypt(plainText []byte, fileName string) []byte {
 	//打开文件，读取文件内容
-	file, err1 := os.Open(fileName)
-	if err1 != nil {
-		fmt.Println(err1)
-	}
-
-	fileInfo, err2 := file.Stat()
-	if err2 != nil {
-		fmt.Println(err2)
-	}
-	buf := make([]byte, fileInfo.Size())
-	file.Read(buf)
-	file.Close()
+	buf := ReadFile(fileName)
 
 	//2.pem解码
 	block, _ := pem.Decode(buf)
@@ -99,18 +87,7 @@ func RsaEncrypt(plainText []byte, fileName string) []byte {
 //rsa解密，私钥解密
 func RsaDecrypt(cipherText []byte, fileName string) []byte {
 	//打开文件，读取文件内容
-	file, err1 := os.Open(fileName)
-	if err1 != nil {
-		fmt.Println(err1)
-	}
-
-	fileInfo, err2 := file.Stat()
-	if err2 != nil {
-		fmt.Println(err2)
-	}
-	buf := make([]byte, fileInfo.Size())
-	file.Read(buf)
-	file.Close()
+	buf := ReadFile(fileName)
 
 	//2.pem解码
 	block, _ := pem.Decode(buf)

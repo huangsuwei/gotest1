@@ -55,26 +55,10 @@ func CalculateHashSum(plainText []byte) []byte {
 	return myHash.Sum(nil)
 }
 
-//读文件
-func ReadFile(fileName string) []byte {
-	//打开私钥文件
-	file, err := os.Open(fileName)
-	if err != nil {
-		fmt.Println("os.open err", err)
-	}
-
-	//读文件
-	info, _ := file.Stat()
-	buf := make([]byte, info.Size())
-	file.Read(buf)
-	file.Close()
-
-	return buf
-}
-
 //rsa签名校验
 func VerifyRsa(plainText, signText []byte, pubFileName string) bool {
 	//1.打开公钥文件，读取
+	/*buf := code2020ReadFile(pubFileName)*/
 	buf := ReadFile(pubFileName)
 
 	//2.pem解码，得到结构体
@@ -91,4 +75,21 @@ func VerifyRsa(plainText, signText []byte, pubFileName string) bool {
 
 	//6.签名认证，rsa中的函数
 	return rsa.VerifyPKCS1v15(pubKey, crypto.SHA512, hashText[:], signText) == nil
+}
+
+//读文件
+func ReadFile(fileName string) []byte {
+	//打开私钥文件
+	file, err := os.Open(fileName)
+	if err != nil {
+		fmt.Println("os.open err", err)
+	}
+
+	//读文件
+	info, _ := file.Stat()
+	buf := make([]byte, info.Size())
+	file.Read(buf)
+	file.Close()
+
+	return buf
 }
